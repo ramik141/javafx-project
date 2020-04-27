@@ -34,7 +34,7 @@ public class FileHandler {
         try {
             content = Files.readString(Paths.get(filePath));
         } catch (IOException e) {
-            throw new IOException("Can't save a file!");
+            throw new IOException("Can't open a file!");
             //System.out.println("problem with IO");
             //e.printStackTrace();
         }

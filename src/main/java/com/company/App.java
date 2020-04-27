@@ -55,32 +55,21 @@ public class App extends Application {
             }
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            Alert alertSave = new Alert(Alert.AlertType.ERROR);
-            alertSave.setTitle("Error Dialog");
-            alertSave.setHeaderText("Something go wrong this time.");
-            alertSave.setContentText(ex.getMessage());
-            alertSave.showAndWait();
+            errorMSG(ex);
         }
-            System.out.println("Save");
-            //fileHandler.setFilePath("/home/ra/Test/Test.java");
-            //fileHandler.saveFile(textArea.getText());
-
+        System.out.println("SaveAs");
     }
 
     public void save(ActionEvent e){
 
-        //FileChooser fileChooser = new FileChooser();
-        //fileChooser.setTitle("Save File");
-        //File f = fileChooser.showSaveDialog(new Stage());
-        //if (f != null) {
-        //    String path = f.getAbsolutePath();
+        try{
             fileHandler.setFilePath(path);
-            //fileHandler.saveFile(textArea.getText());
-        //}
+            fileHandler.saveFile(textArea.getText());
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            errorMSG(ex);
+        }
         System.out.println("Save");
-        //fileHandler.setFilePath("/home/ra/Test/Test.java");
-        //fileHandler.saveFile(textArea.getText());
-
     }
 
     public void open(ActionEvent e){
@@ -104,16 +93,18 @@ public class App extends Application {
             }
         } catch (Exception except) {
             System.out.println(except.getMessage());
-            Alert open = new Alert(Alert.AlertType.ERROR);
-            open.setTitle("Error Dialog");
-            open.setHeaderText("Something go wrong this time.");
-            open.setContentText(except.getMessage());
-            open.showAndWait();
+            errorMSG(except);
         }
         System.out.println("Open");
-        //fileHandler.setFilePath("/home/ra/Test/Test.java");
-        //String content = fileHandler.openFile();
-        //textArea.setText(content);
+    }
+
+    public void errorMSG (Exception e){
+        Alert open = new Alert(Alert.AlertType.ERROR);
+        //System.out.println("kukkuu");
+        open.setTitle("Error Dialog");
+        open.setHeaderText("Something go wrong this time.");
+        open.setContentText(e.getMessage());
+        open.showAndWait();
     }
 
     @Override
@@ -186,26 +177,19 @@ public class App extends Application {
         editPaste.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
         mEdit.getItems().add(editPaste);
 
-        editCut.setOnAction(new EventHandler<ActionEvent>() {
+        /*editCut.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
                 textArea.cut();
             }
-        });
+        });*/
 
-        editCopy.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                textArea.copy();
-            }
-        });
+        editCut.setOnAction(e -> textArea.cut());
 
-        editPaste.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                textArea.paste();
-            }
-        });
+        editCopy.setOnAction(e ->  textArea.copy());
+
+        editPaste.setOnAction(e -> textArea.paste());
+
 
         // RUN MENU
         Menu mRun = new Menu(labels.getString("run"));
