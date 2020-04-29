@@ -2,6 +2,7 @@
 package com.company;
 
 import com.company.util.FileHandler;
+import com.company.util.JavaCompiler;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -27,6 +28,7 @@ import javafx.scene.layout.BorderPane;
 import javax.swing.*;
 import java.io.File;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class App extends Application {
@@ -36,6 +38,7 @@ public class App extends Application {
     private MenuItem fileOpen;
     private MenuItem fileSave;
     private String path;
+    public JavaCompiler compiler;
 
     public App(){
         System.out.println("Constructor");
@@ -100,17 +103,27 @@ public class App extends Application {
 
     public void errorMSG (Exception e){
         Alert open = new Alert(Alert.AlertType.ERROR);
-        //System.out.println("kukkuu");
         open.setTitle("Error Dialog");
         open.setHeaderText("Something go wrong this time.");
         open.setContentText(e.getMessage());
         open.showAndWait();
     }
 
+    public void search(String searchText) {
+
+        int index = this.textArea.getText().indexOf(searchText);
+
+        textArea.selectRange(index, index + searchText.length());
+
+    }
+
     @Override
     public void start(Stage stage) {
 
         fileHandler = new FileHandler();
+        compiler = new JavaCompiler();
+        TextArea output = new TextArea();
+
         SplitPane splitpane = new SplitPane();
         splitpane.setOrientation(Orientation.VERTICAL);
 
@@ -155,12 +168,24 @@ public class App extends Application {
         fileExit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                System.out.println("Exit");
-                System.exit(0);
+                //System.out.println("Exit");
+                //System.exit(0);
+                Alert exitAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                exitAlert.setTitle("Exit dialog");
+                exitAlert.setHeaderText("Are you sure you want to exit?");
+
+                Optional<ButtonType> result = exitAlert.showAndWait();
+                ButtonType buttonType = result.get();
+
+                if(buttonType == ButtonType.OK){
+                    System.exit(0);
+                } else {
+                    return;
+                }
             }
         });
 
-        textArea = new TextArea(("Center"));
+        textArea = new TextArea();
         textArea.setStyle("-fx-font-size: 12");
 
         // EDIT MENU
@@ -184,7 +209,7 @@ public class App extends Application {
             }
         });*/
 
-        editCut.setOnAction(e -> textArea.cut());
+        editCut.setOnAction(e ->   textArea.cut());
 
         editCopy.setOnAction(e ->  textArea.copy());
 
@@ -221,8 +246,28 @@ public class App extends Application {
 
         // Toolbar
         ToolBar toolBar = new ToolBar();
+
+        Button compile = new Button("Compile & Run");
+        compile.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.out.println("Compile");
+                //compiler.compileAndRun(path);
+                String compContent = compiler.compileAndRun(path);;
+                output.setText(compContent);
+            }
+        });
+        toolBar.getItems().add(compile);
+
         Button button = new Button("Clear");
-        toolBar.getItems().add(button);
+        button.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.out.println("Clear");
+                textArea.clear();
+            }
+        });
+        //toolBar.getItems().add(button);
 
         ComboBox comboFont = new ComboBox(FXCollections.observableList(Font.getFamilies()));
         //comboFont.setPrefWidth(150);
@@ -236,10 +281,8 @@ public class App extends Application {
         toolBar.getItems().add(comboFont);
 
         TextField fontSize = new TextField("12");
-
         fontSize.setPrefColumnCount(2);
 
-        //ComboBox fontSize = new ComboBox(FXCollections.observableArrayList(koko));
         fontSize.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -253,7 +296,6 @@ public class App extends Application {
         ColorPicker colorPicker = new ColorPicker();
         //Color value = colorPicker.getValue();
 
-
         colorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -263,16 +305,28 @@ public class App extends Application {
 
         toolBar.getItems().add(colorPicker);
 
-        button.setOnAction(new EventHandler<ActionEvent>() {
+
+
+        TextField searchText = new TextField();
+
+        searchText.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
-            public void handle(ActionEvent actionEvent) {
-                System.out.println("Clear");
-                textArea.clear();
+            public void handle(KeyEvent keyEvent) {
+                if(keyEvent.getCode() == KeyCode.ENTER) {
+                    search(searchText.getText());
+                }
             }
         });
+        toolBar.getItems().add(searchText);
+        Label label = new Label();
 
-        splitpane.getItems().addAll(textArea, new TextArea("down"));
-        //bPane.setCenter(text);
+
+
+        output.setStyle("-fx-text-fill: lime; -fx-control-inner-background: black;");
+        //output.setStyle("text-area-background: black;");
+
+        //splitpane.getItems().addAll(textArea, new TextArea("down"));
+        splitpane.getItems().addAll(textArea, output);
 
         textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -289,7 +343,7 @@ public class App extends Application {
         root.setTop(vBox);
         root.setCenter(splitpane);
 
-        Scene scene = new Scene(root, 640, 480);
+        Scene scene = new Scene(root, 720, 600);
 
         stage.setTitle(title);
         stage.initStyle(StageStyle.DECORATED);
