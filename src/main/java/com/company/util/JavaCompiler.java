@@ -13,11 +13,10 @@ public class JavaCompiler {
         String fileName = file.substring(file.lastIndexOf("\\") + 1);
         String folderPath = file.replace(fileName, "");
         System.out.println(file);
-        System.out.println(fileName);
-        System.out.println(folderPath);
+
+
         try {
             String[] compile = {"javac", fileName};
-            // Korjaa tänne "File". fileName on siis "File.java", mutta ajossa pitäisi olla "File"
             String [] run = {"java", "-cp", folderPath, file};
             // Käännös
             var process = Runtime.getRuntime().exec(compile);

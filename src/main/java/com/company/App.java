@@ -317,7 +317,7 @@ public class App extends Application {
             }
         });
         toolBar.getItems().add(searchText);
-        
+
         output.setStyle("-fx-text-fill: lime; -fx-control-inner-background: black;");
 
         splitpane.getItems().addAll(textArea, output);
