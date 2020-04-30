@@ -80,7 +80,6 @@ public class App extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open File");
 
-        //File f = fileChooser.showOpenDialog(fileOpen.getParentPopup().getScene().getWindow());
         File f = fileChooser.showOpenDialog(null);
 
         try {
@@ -318,14 +317,9 @@ public class App extends Application {
             }
         });
         toolBar.getItems().add(searchText);
-        Label label = new Label();
-
-
-
+        
         output.setStyle("-fx-text-fill: lime; -fx-control-inner-background: black;");
-        //output.setStyle("text-area-background: black;");
 
-        //splitpane.getItems().addAll(textArea, new TextArea("down"));
         splitpane.getItems().addAll(textArea, output);
 
         textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
