@@ -343,7 +343,7 @@ public class App extends Application {
         root.setTop(vBox);
         root.setCenter(splitpane);
 
-        Scene scene = new Scene(root, 720, 600);
+        Scene scene = new Scene(root, 720, 550);
 
         stage.setTitle(title);
         stage.initStyle(StageStyle.DECORATED);
