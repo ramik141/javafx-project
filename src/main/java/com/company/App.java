@@ -11,7 +11,6 @@ import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.Group;
 import javafx.scene.control.*;
-//import javafx.scene.control.MenuItemBuilder;
 
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -25,7 +24,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.scene.layout.BorderPane;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.Locale;
 import java.util.Optional;
@@ -39,11 +37,17 @@ public class App extends Application {
     private MenuItem fileSave;
     private String path;
     public JavaCompiler compiler;
+    private TextField searchText;
 
     public App(){
-        System.out.println("Constructor");
+            }
+
+
+    public void newText(ActionEvent e){
+        textArea.clear();
     }
 
+    // Save As
     public void saveAs(ActionEvent e){
 
         FileChooser fileChooser = new FileChooser();
@@ -58,11 +62,12 @@ public class App extends Application {
             }
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            errorMSG(ex);
+            errorMsg(ex);
         }
         System.out.println("SaveAs");
     }
 
+    // Save
     public void save(ActionEvent e){
 
         try{
@@ -70,11 +75,12 @@ public class App extends Application {
             fileHandler.saveFile(textArea.getText());
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            errorMSG(ex);
+            errorMsg(ex);
         }
         System.out.println("Save");
     }
 
+    // Open
     public void open(ActionEvent e){
 
         FileChooser fileChooser = new FileChooser();
@@ -95,12 +101,13 @@ public class App extends Application {
             }
         } catch (Exception except) {
             System.out.println(except.getMessage());
-            errorMSG(except);
+            errorMsg(except);
         }
         System.out.println("Open");
     }
 
-    public void errorMSG (Exception e){
+    // Error message dialog
+    public void errorMsg (Exception e){
         Alert open = new Alert(Alert.AlertType.ERROR);
         open.setTitle("Error Dialog");
         open.setHeaderText("Something go wrong this time.");
@@ -108,12 +115,48 @@ public class App extends Application {
         open.showAndWait();
     }
 
+    // Search
     public void search(String searchText) {
 
         int index = this.textArea.getText().indexOf(searchText);
-
+        System.out.println(index);
         textArea.selectRange(index, index + searchText.length());
 
+    }
+
+    // Search previous
+    public void searchPrev(String searchText) {
+
+        int index = (textArea.getCaretPosition() - searchText.length()-1);
+        String text = textArea.getText();
+        int i = text.indexOf(searchText,index);
+        System.out.println(index);
+        textArea.selectRange(i, i + searchText.length());
+
+    }
+
+    // Search next
+    public void searchNext(String searchText) {
+
+        int index = textArea.getCaretPosition();
+        String text = textArea.getText();
+        int i = text.indexOf(searchText,index);
+        System.out.println(index);
+        textArea.selectRange(i, i + searchText.length());
+
+    }
+
+    public String toRgbString(Color c){
+        return "rgb("
+                + to255Int(c.getRed())
+                + "," + to255Int(c.getGreen())
+                + "," + to255Int(c.getBlue())
+                + ")";
+    }
+
+    public int to255Int(double d){
+
+        return (int) (d * 255);
     }
 
     @Override
@@ -121,7 +164,8 @@ public class App extends Application {
 
         fileHandler = new FileHandler();
         compiler = new JavaCompiler();
-        TextArea output = new TextArea();
+        TextArea outText = new TextArea();
+        BorderPane output = new BorderPane();
 
         SplitPane splitpane = new SplitPane();
         splitpane.setOrientation(Orientation.VERTICAL);
@@ -129,17 +173,17 @@ public class App extends Application {
         Locale locale = Locale.getDefault();
         //Locale locale = new Locale("fi", "FI");
         ResourceBundle labels = ResourceBundle.getBundle("ui", locale);
+
         String title = labels.getString("title");
-
         BorderPane root = new BorderPane();
-
-
         FileChooser fileChooser = new FileChooser();
 
+        // FILE MENU
         Menu mFile = new Menu(labels.getString("file"));
 
         MenuItem fileNew = new MenuItem(labels.getString("new"));
         fileNew.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN));
+        fileNew.setOnAction(this::newText);
         mFile.getItems().add(fileNew);
 
         fileOpen = new MenuItem(labels.getString("open"));
@@ -201,6 +245,10 @@ public class App extends Application {
         editPaste.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
         mEdit.getItems().add(editPaste);
 
+        MenuItem editClear = new MenuItem(labels.getString("clear_all"));
+        //editPaste.setAccelerator(new KeyCodeCombination(KeyCode., KeyCombination.CONTROL_DOWN));
+        mEdit.getItems().add(editClear);
+
         /*editCut.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -209,15 +257,22 @@ public class App extends Application {
         });*/
 
         editCut.setOnAction(e ->   textArea.cut());
-
         editCopy.setOnAction(e ->  textArea.copy());
-
         editPaste.setOnAction(e -> textArea.paste());
-
+        editClear.setOnAction(e -> textArea.clear());
 
         // RUN MENU
         Menu mRun = new Menu(labels.getString("run"));
         MenuItem runItem1 = new MenuItem(labels.getString("compile_run"));
+        runItem1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.out.println("Compile&Run");
+                //compiler.compileAndRun(path);
+                String compContent = compiler.compileAndRun(path);;
+                outText.setText(compContent);
+            }
+        });
         mRun.getItems().add(runItem1);
 
         // ABOUT MENU
@@ -241,9 +296,7 @@ public class App extends Application {
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().addAll(mFile, mEdit, mRun, mAbout);
 
-        //VBox vBox = new VBox(menuBar);
-
-        // Toolbar
+       // TOOLBAR
         ToolBar toolBar = new ToolBar();
 
         Button compile = new Button("Compile & Run");
@@ -253,12 +306,12 @@ public class App extends Application {
                 System.out.println("Compile");
                 //compiler.compileAndRun(path);
                 String compContent = compiler.compileAndRun(path);;
-                output.setText(compContent);
+                outText.setText(compContent);
             }
         });
         toolBar.getItems().add(compile);
 
-        Button button = new Button("Clear");
+        /*Button button = new Button("Clear");
         button.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -266,7 +319,7 @@ public class App extends Application {
                 textArea.clear();
             }
         });
-        //toolBar.getItems().add(button);
+        toolBar.getItems().add(button);*/
 
         ComboBox comboFont = new ComboBox(FXCollections.observableList(Font.getFamilies()));
         //comboFont.setPrefWidth(150);
@@ -291,9 +344,8 @@ public class App extends Application {
         toolBar.getItems().add(fontSize);
 
 
-        // Colorpicker
+        // COLORPICKER
         ColorPicker colorPicker = new ColorPicker();
-        //Color value = colorPicker.getValue();
 
         colorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -301,13 +353,11 @@ public class App extends Application {
                 textArea.setStyle("-fx-text-fill: " + toRgbString(colorPicker.getValue()) + ";");
             }
         });
-
         toolBar.getItems().add(colorPicker);
 
 
 
-        TextField searchText = new TextField();
-
+        searchText = new TextField();
         searchText.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
@@ -316,9 +366,33 @@ public class App extends Application {
                 }
             }
         });
-        toolBar.getItems().add(searchText);
 
-        output.setStyle("-fx-text-fill: lime; -fx-control-inner-background: black;");
+        Button nextButton = new Button(">");
+        nextButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                searchNext(searchText.getText());
+            }
+        });
+
+        Button backButton = new Button("<");
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                searchPrev(searchText.getText());
+            }
+        });
+
+
+        toolBar.getItems().addAll(searchText, backButton, nextButton);
+
+        //BorderPane output = new BorderPane();
+        output.setTop(new Label ("Output"));
+        output.setCenter(outText);
+        outText.setStyle("-fx-text-fill: lime; -fx-control-inner-background: black;");
+        outText.setEditable(false);
+
+        //VBox out = new VBox(output, outText);
 
         splitpane.getItems().addAll(textArea, output);
 
@@ -337,7 +411,7 @@ public class App extends Application {
         root.setTop(vBox);
         root.setCenter(splitpane);
 
-        Scene scene = new Scene(root, 720, 550);
+        Scene scene = new Scene(root, 780, 580);
 
         stage.setTitle(title);
         stage.initStyle(StageStyle.DECORATED);
@@ -351,21 +425,8 @@ public class App extends Application {
         System.out.println("Stop");
     }
 
-    public String toRgbString(Color c){
-        return "rgb("
-                + to255Int(c.getRed())
-                + "," + to255Int(c.getGreen())
-                + "," + to255Int(c.getBlue())
-                + ")";
-    }
-
-    public int to255Int(double d){
-        return (int) (d * 255);
-    }
-
-
-
     public static void main(String args[]) {
+
         launch(args);
     }
 }
